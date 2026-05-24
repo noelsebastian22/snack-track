@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { CheckCircle2, AlertTriangle, Loader2, PackageCheck, ArrowLeft } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import ToastContainer from '@/components/ui/ToastContainer';
 import { handoverOrder } from '@/app/actions/handover-order';
 
 const supabase = createClient();
@@ -82,7 +81,6 @@ export default function VerifyOrderPage() {
   if (!order) {
     return (
       <main className="min-h-screen bg-[#0B0F19]">
-        <ToastContainer />
         <header className="sticky top-0 z-10 bg-[#151C2C]/80 backdrop-blur-md border-b border-[#1E293B] px-5 py-4">
           <div className="flex items-center gap-3">
             <button onClick={() => router.push('/verify')} className="w-10 h-10 rounded-xl bg-[#0B0F19] border border-[#1E293B] flex items-center justify-center hover:border-[#00C853] transition-colors text-[#94A3B8]">
@@ -108,7 +106,6 @@ export default function VerifyOrderPage() {
 
   return (
     <main className="min-h-screen bg-[#0B0F19]">
-      <ToastContainer />
       <header className="sticky top-0 z-10 bg-[#151C2C]/80 backdrop-blur-md border-b border-[#1E293B] px-5 py-4">
         <div className="flex items-center gap-3">
           <button onClick={() => router.push('/verify')} className="w-10 h-10 rounded-xl bg-[#0B0F19] border border-[#1E293B] flex items-center justify-center hover:border-[#00C853] transition-colors text-[#94A3B8]">
