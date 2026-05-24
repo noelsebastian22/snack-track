@@ -2,6 +2,13 @@
 
 import { createServiceRoleClient } from '@/utils/supabase/service-role'
 
+interface OrderLine {
+  product_id: string
+  name: string
+  price: number
+  qty: number
+}
+
 interface SeedResult {
   success: boolean
   ordersCreated: number
@@ -25,7 +32,7 @@ export async function seedTestOrders(): Promise<SeedResult> {
       }
     }
 
-    const pickItems = () => {
+  const pickItems = (): OrderLine[] => {
       const numItems = Math.random() > 0.5 ? 2 : 1
       const shuffled = [...products].sort(() => 0.5 - Math.random())
       return shuffled.slice(0, numItems).map(p => ({
@@ -36,9 +43,8 @@ export async function seedTestOrders(): Promise<SeedResult> {
       }))
     }
 
-    const pickTotal = (items: typeof items) => {
-      return items.reduce((sum, i) => sum + i.price * i.qty, 0)
-    }
+    const totalAmount = (lineItems: OrderLine[]) =>
+      lineItems.reduce((sum, i) => sum + i.price * i.qty, 0)
 
     const testOrders = [
       {
@@ -82,7 +88,7 @@ export async function seedTestOrders(): Promise<SeedResult> {
           customer_name: order.customer_name,
           customer_phone: order.customer_phone,
           items: items,
-          total_amount: pickTotal(items),
+          total_amount: totalAmount(items),
           is_collected: order.is_collected,
           paid_at: order.paid_at,
         })
