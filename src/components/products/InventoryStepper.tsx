@@ -16,14 +16,12 @@ export default function InventoryStepper({ productId, initialQty, onUpdate }: In
   const updateQty = async (newQty: number) => {
     if (newQty < 0) return;
     
-    // Optimistic UI update
     setQty(newQty);
     onUpdate(newQty);
 
     const res = await updateProductQty(productId, newQty);
     if ('error' in res && res.error) {
       console.error('Error updating inventory:', res.error);
-      // Rollback on error
       setQty(initialQty);
       onUpdate(initialQty);
       alert('Failed to update inventory. Please try again.');
@@ -31,19 +29,19 @@ export default function InventoryStepper({ productId, initialQty, onUpdate }: In
   };
 
   return (
-    <div className="flex items-center gap-4 bg-[var(--color-surface-container)] border-2 border-[var(--color-secondary)] rounded-[var(--radius-full)] px-4 py-2">
+    <div className="flex items-center gap-3 bg-[#0B0F19] border border-[#1E293B] rounded-xl px-3 py-2">
       <button 
         onClick={() => updateQty(qty - 1)}
-        className="text-[var(--color-secondary)] hover:text-[var(--color-primary)] transition-colors"
+        className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#151C2C] border border-[#1E293B] hover:border-[#00C853] transition-colors text-white"
       >
-        <Minus size={20} strokeWidth={3} />
+        <Minus size={18} strokeWidth={3} />
       </button>
-      <span className="stat-display text-2xl min-w-[3ch] text-center">{qty}</span>
+      <span className="text-xl font-black min-w-[3ch] text-center text-white tabular-nums">{qty}</span>
       <button 
         onClick={() => updateQty(qty + 1)}
-        className="text-[var(--color-secondary)] hover:text-[var(--color-primary)] transition-colors"
+        className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#151C2C] border border-[#1E293B] hover:border-[#00C853] transition-colors text-white"
       >
-        <Plus size={20} strokeWidth={3} />
+        <Plus size={18} strokeWidth={3} />
       </button>
     </div>
   );

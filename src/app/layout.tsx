@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Sidebar from '@/components/layout/Sidebar';
+import BottomTabBar from '@/components/layout/BottomTabBar';
+import Providers from '@/app/providers';
 
 export const metadata: Metadata = {
   title: "Snack-Track Vendor POS",
@@ -22,8 +25,16 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
       </head>
-      <body>
-        {children}
+      <body className="bg-[#0B0F19] text-white antialiased">
+        <Providers>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <main className="flex-1 md:ml-[260px] pb-20 md:pb-0">
+              {children}
+            </main>
+          </div>
+          <BottomTabBar />
+        </Providers>
       </body>
     </html>
   );

@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import imageCompression from 'browser-image-compression';
 import { Plus, Minus, Trash2, Edit3, Camera, Loader2, Search } from 'lucide-react';
-import BottomNav from '@/components/layout/BottomNav';
 import Dialog from '@/components/ui/Dialog';
 import { updateProductQty, toggleProductActive, deleteProduct, saveProduct, uploadProductImage, UploadResult } from '@/app/actions/product-actions';
 
@@ -66,19 +65,19 @@ function ProductCard({
   };
 
   return (
-    <div className={`bg-white border-2 border-secondary rounded-bento overflow-hidden shadow-[4px_4px_0px_#1A1C1C] flex flex-col ${!product.is_active ? 'opacity-60' : ''}`}>
-      <div className="h-40 bg-surface-container relative overflow-hidden border-b-2 border-secondary">
+    <div className={`bg-[#151C2C] rounded-2xl border border-[#1E293B] overflow-hidden shadow-xl flex flex-col ${!product.is_active ? 'opacity-60' : ''}`}>
+      <div className="h-40 bg-[#0B0F19] relative overflow-hidden">
         {product.image_url ? (
           <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-outline font-bold text-sm">NO IMAGE</div>
+          <div className="w-full h-full flex items-center justify-center text-[#94A3B8] font-bold text-sm">NO IMAGE</div>
         )}
         <button
           onClick={toggleActive}
-          className={`absolute top-3 right-3 px-3 py-1.5 text-xs font-bold uppercase rounded-full border-2 transition-colors ${
+          className={`absolute top-3 right-3 px-3 py-1.5 text-xs font-bold uppercase rounded-full transition-colors ${
             product.is_active
-              ? 'bg-success text-white border-success'
-              : 'bg-surface-container-highest text-on-surface-variant border-outline'
+              ? 'bg-[#00C853] text-white'
+              : 'bg-[#0B0F19] text-[#94A3B8] border border-[#1E293B]'
           }`}
         >
           {product.is_active ? 'Active' : 'Hidden'}
@@ -87,25 +86,25 @@ function ProductCard({
 
       <div className="p-4 flex flex-col gap-3 flex-1">
         <div className="flex justify-between items-start">
-          <h3 className="font-black uppercase text-sm leading-tight flex-1 truncate pr-2">{product.name}</h3>
-          <span className="text-xl font-black text-primary whitespace-nowrap">${(product.price / 100).toFixed(2)}</span>
+          <h3 className="font-black uppercase text-sm leading-tight flex-1 truncate pr-2 text-white">{product.name}</h3>
+          <span className="text-xl font-black text-[#00C853] whitespace-nowrap">${(product.price / 100).toFixed(2)}</span>
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 bg-surface-container border-2 border-secondary rounded-full px-1 py-1">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => updateQty(-1)}
               disabled={updating}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-primary/10 transition-colors disabled:opacity-40"
+              className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#0B0F19] border border-[#1E293B] hover:border-[#00C853] transition-colors disabled:opacity-40 text-white"
               aria-label="Decrease quantity"
             >
               <Minus size={18} strokeWidth={3} />
             </button>
-            <span className="text-xl font-black min-w-[2.5ch] text-center tabular-nums">{qty}</span>
+            <span className="text-xl font-black min-w-[2.5ch] text-center text-white tabular-nums">{qty}</span>
             <button
               onClick={() => updateQty(1)}
               disabled={updating}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-primary/10 transition-colors disabled:opacity-40"
+              className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#0B0F19] border border-[#1E293B] hover:border-[#00C853] transition-colors disabled:opacity-40 text-white"
               aria-label="Increase quantity"
             >
               <Plus size={18} strokeWidth={3} />
@@ -115,14 +114,14 @@ function ProductCard({
           <div className="flex gap-1">
             <button
               onClick={() => onEdit(product)}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant"
+              className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[#1E293B] transition-colors text-[#94A3B8] hover:text-white"
               aria-label="Edit product"
             >
               <Edit3 size={18} />
             </button>
             <button
               onClick={() => onDelete(product.id)}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-error/10 transition-colors text-error"
+              className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-red-500/10 transition-colors text-[#EF4444] hover:text-[#EF4444]"
               aria-label="Delete product"
             >
               <Trash2 size={18} />
@@ -172,7 +171,6 @@ function ProductForm({
         const options = { maxSizeMB: 0.5, maxWidthOrHeight: 800, useWebWorker: true };
         const compressedFile = await imageCompression(imageFile, options);
 
-        // Convert to base64 for server action
         const reader = new FileReader();
         const base64 = await new Promise<string>((resolve, reject) => {
           reader.onload = () => resolve(reader.result as string);
@@ -212,73 +210,73 @@ function ProductForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div
         onClick={() => fileInputRef.current?.click()}
-        className="relative w-full aspect-video bg-surface-container border-2 border-dashed border-outline rounded-bento flex flex-col items-center justify-center cursor-pointer overflow-hidden"
+        className="relative w-full aspect-video bg-[#0B0F19] border-2 border-dashed border-[#1E293B] rounded-2xl flex flex-col items-center justify-center cursor-pointer overflow-hidden hover:border-[#00C853]/50 transition-colors"
       >
         {imagePreview ? (
           <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
         ) : (
           <>
-            <Camera size={40} className="text-outline mb-2" />
-            <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Upload Photo</span>
+            <Camera size={40} className="text-[#94A3B8] mb-2" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">Upload Photo</span>
           </>
         )}
         <input ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" type="file" />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Product Name</label>
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">Product Name</label>
         <input
           required
           type="text"
           placeholder="e.g. Salted Soft Pretzel"
-          className="w-full p-3 border-2 border-secondary rounded-lg font-medium outline-none focus:border-primary transition-colors"
+          className="w-full bg-[#0B0F19] border border-[#1E293B] rounded-xl text-white px-4 py-3 outline-none focus:border-[#00C853] focus:ring-1 focus:ring-[#00C853] transition-colors"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Description</label>
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">Description</label>
         <textarea
           rows={2}
           placeholder="Optional description"
-          className="w-full p-3 border-2 border-secondary rounded-lg font-medium outline-none focus:border-primary transition-colors resize-none"
+          className="w-full bg-[#0B0F19] border border-[#1E293B] rounded-xl text-white px-4 py-3 outline-none focus:border-[#00C853] focus:ring-1 focus:ring-[#00C853] transition-colors resize-none"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Price ($)</label>
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">Price ($)</label>
         <input
           required
           type="number"
           step="0.01"
           min="0"
           placeholder="0.00"
-          className="w-full p-3 border-2 border-secondary rounded-lg font-medium outline-none focus:border-primary transition-colors"
+          className="w-full bg-[#0B0F19] border border-[#1E293B] rounded-xl text-white px-4 py-3 outline-none focus:border-[#00C853] focus:ring-1 focus:ring-[#00C853] transition-colors"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Initial Stock</label>
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">Initial Stock</label>
         <input
           type="number"
           min="0"
-          className="w-full p-3 border-2 border-secondary rounded-lg font-medium outline-none focus:border-primary transition-colors"
+          className="w-full bg-[#0B0F19] border border-[#1E293B] rounded-xl text-white px-4 py-3 outline-none focus:border-[#00C853] focus:ring-1 focus:ring-[#00C853] transition-colors"
           value={qtyAvailable}
           onChange={(e) => setQtyAvailable(parseInt(e.target.value) || 0)}
         />
       </div>
 
-      <div className="flex items-center justify-between p-3 border-2 border-secondary rounded-lg">
-        <span className="text-sm font-bold">Show in Menu</span>
+      <div className="flex items-center justify-between p-3 bg-[#0B0F19] border border-[#1E293B] rounded-xl">
+        <span className="text-sm font-bold text-white">Show in Menu</span>
         <button
           type="button"
           onClick={() => setIsActive(!isActive)}
-          className={`w-14 h-7 rounded-full transition-colors relative ${isActive ? 'bg-primary' : 'bg-outline'}`}
+          className={`w-14 h-7 rounded-full transition-colors relative ${isActive ? 'bg-[#00C853]' : 'bg-[#1E293B]'}`}
         >
           <div className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform shadow ${isActive ? 'translate-x-7' : ''}`} />
         </button>
@@ -287,7 +285,7 @@ function ProductForm({
       <button
         type="submit"
         disabled={loading}
-        className="w-full h-12 bg-primary text-white font-bold rounded-lg border-2 border-secondary shadow-[4px_4px_0px_#1A1C1C] active:translate-y-0.5 active:shadow-none flex items-center justify-center gap-2 disabled:opacity-50"
+        className="w-full h-12 bg-[#00C853] text-white font-bold rounded-xl hover:bg-[#00A844] active:scale-[0.98] transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
       >
         {loading ? <Loader2 className="animate-spin" size={20} /> : product ? 'Update Product' : 'Save Product'}
       </button>
@@ -338,30 +336,30 @@ export default function InventoryPage() {
   const filtered = products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <main className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-10 bg-secondary text-white px-5 py-4">
-        <div className="max-w-5xl mx-auto">
-          <span className="text-xs font-bold uppercase tracking-wider text-primary">Inventory</span>
-          <h1 className="text-2xl font-black uppercase">Snack Management</h1>
+    <main className="min-h-screen bg-[#0B0F19]">
+      <header className="sticky top-0 z-10 bg-[#151C2C]/80 backdrop-blur-md border-b border-[#1E293B] px-5 py-4">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-[#00C853]">Inventory</span>
+          <h1 className="text-2xl font-black uppercase text-white">Snack Management</h1>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto p-5 space-y-5">
+      <div className="p-5 space-y-5">
         {/* Search + Add */}
         <div className="flex gap-3">
           <div className="flex-1 relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
             <input
               type="text"
               placeholder="Search products..."
-              className="w-full pl-10 pr-4 py-3 bg-white border-2 border-secondary rounded-bento font-medium outline-none focus:border-primary transition-colors"
+              className="w-full pl-11 pr-4 py-3 bg-[#151C2C] border border-[#1E293B] rounded-xl text-white outline-none focus:border-[#00C853] focus:ring-1 focus:ring-[#00C853] transition-colors"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <button
             onClick={handleAdd}
-            className="w-12 h-12 bg-primary text-white rounded-bento border-2 border-secondary shadow-[4px_4px_0px_#1A1C1C] flex items-center justify-center active:translate-y-0.5 active:shadow-none flex-shrink-0"
+            className="w-12 h-12 bg-[#00C853] text-white rounded-xl hover:bg-[#00A844] active:scale-[0.98] transition-all flex-shrink-0 flex items-center justify-center"
             aria-label="Add new snack"
           >
             <Plus size={24} />
@@ -371,10 +369,10 @@ export default function InventoryPage() {
         {/* Product Grid */}
         {loading ? (
           <div className="flex justify-center py-16">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-[#00C853] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-on-surface-variant">
+          <div className="text-center py-16 text-[#94A3B8]">
             <p className="font-medium">No products found</p>
           </div>
         ) : (
@@ -407,8 +405,6 @@ export default function InventoryPage() {
           onCancel={() => setDialogOpen(false)}
         />
       </Dialog>
-
-      <BottomNav />
     </main>
   );
 }

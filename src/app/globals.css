@@ -1,34 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #FF8C00;
-  --color-on-primary: #FFFFFF;
-  --color-primary-container: #FF8C00;
-  --color-on-primary-container: #2F1500;
-
-  --color-secondary: #1A1C1C;
-  --color-on-secondary: #FFFFFF;
-
-  --color-success: #2E7D32;
-  --color-on-success: #FFFFFF;
-
-  --color-background: #F9F9F9;
-  --color-on-background: #1A1C1C;
-
-  --color-surface: #F9F9F9;
-  --color-surface-dim: #DADADA;
-  --color-surface-bright: #F9F9F9;
-  --color-surface-container: #EEEEEE;
-  --color-surface-container-high: #E8E8E8;
-  --color-surface-container-highest: #E2E2E2;
-  --color-on-surface: #1A1C1C;
-  --color-on-surface-variant: #564334;
-
-  --color-outline: #897362;
-  --color-outline-variant: #DDC1AE;
-
-  --color-error: #BA1A1A;
-  --color-on-error: #FFFFFF;
+  --color-canvas: #0B0F19;
+  --color-card: #151C2C;
+  --color-border: #1E293B;
+  --color-accent: #00C853;
+  --color-accent-hover: #00A844;
+  --color-text-primary: #FFFFFF;
+  --color-text-muted: #94A3B8;
+  --color-surface-dark: #0B0F19;
+  --color-surface-card: #151C2C;
+  --color-surface-border: #1E293B;
 
   --font-sans: 'Public Sans', system-ui, -apple-system, sans-serif;
 
@@ -38,10 +20,8 @@
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
+  --radius-2xl: 16px;
   --radius-full: 9999px;
-
-  --spacing-touch: 48px;
-  --spacing-gutter: 16px;
 }
 
 * {
@@ -49,8 +29,8 @@
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-on-background);
+  background-color: #0B0F19;
+  color: #FFFFFF;
   font-family: var(--font-sans);
   margin: 0;
   -webkit-font-smoothing: antialiased;
@@ -60,5 +40,5 @@ body {
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
   font-weight: 800;
-  color: var(--color-secondary);
+  color: #FFFFFF;
 }

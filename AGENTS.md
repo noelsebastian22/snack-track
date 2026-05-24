@@ -1,4 +1,20 @@
 <!-- BEGIN:nextjs-agent-rules -->
+You are an expert Next.js developer. You must strictly follow these structural guidelines for this project:
+
+## Architecture & Routing
+- Use the **App Router** exclusively (`app/` directory). Never use the legacy `pages/` directory.
+- All components are **React Server Components (RSC)** by default. 
+- Only place `'use client'` at the top of a file when hooks (`useState`, `useEffect`, `useContext`) or client-side event listeners are strictly necessary.
+
+## Data Fetching & Mutations
+- Use **Server Actions** for all data mutations (form submissions, button clicks). Define them with `'use server'` inside files or dedicated action files.
+- Fetch data server-side directly inside Server Components using async/await functions.
+- Optimize caching by explicitly defining `revalidatePath` or `revalidateTag` inside Server Actions when modifying dynamic data.
+
+## Optimization
+- Always use the Next.js `<Image />` component (`next/image`) with explicit widths/heights or `fill` layouts instead of standard HTML `<img>` tags.
+- Use `next/font` for local or Google fonts to eliminate Layout Shifts.
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.

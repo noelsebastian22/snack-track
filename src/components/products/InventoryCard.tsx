@@ -16,17 +16,17 @@ interface InventoryCardProps {
 
 export default function InventoryCard({ product, onRefresh }: InventoryCardProps) {
   return (
-    <div className="bg-white border-2 border-[var(--color-secondary)] rounded-[var(--radius-lg)] overflow-hidden shadow-[4px_4px_0px_#1A1C1C] flex flex-col">
-      <div className="h-32 bg-[var(--color-surface-container)] relative overflow-hidden border-b-2 border-[var(--color-secondary)]">
+    <div className="bg-[#151C2C] rounded-2xl border border-[#1E293B] overflow-hidden shadow-xl flex flex-col">
+      <div className="h-32 bg-[#0B0F19] relative overflow-hidden">
         {product.image_url ? (
           <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-[var(--color-outline)] font-bold">STOCK</div>
+          <div className="w-full h-full flex items-center justify-center text-[#94A3B8] font-bold">STOCK</div>
         )}
       </div>
       
       <div className="p-4 flex flex-col items-center gap-3">
-        <h3 className="label-bold text-center h-10 flex items-center">{product.name}</h3>
+        <h3 className="text-sm font-bold uppercase text-center text-white h-10 flex items-center">{product.name}</h3>
         <InventoryStepper 
           productId={product.id} 
           initialQty={product.qty_available} 

@@ -31,17 +31,17 @@ export default function Dialog({ open, onClose, title, children }: DialogProps) 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className="bg-white border-2 border-secondary rounded-bento w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-[8px_8px_0px_#1A1C1C] animate-in">
-        <div className="sticky top-0 bg-white border-b-2 border-secondary px-5 py-4 flex justify-between items-center z-10 rounded-t-[22px]">
-          <h2 className="text-xl font-black uppercase">{title}</h2>
+      <div className="bg-[#151C2C] border border-[#1E293B] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl animate-in mb-16 md:mb-0">
+        <div className="sticky top-0 bg-[#151C2C] border-b border-[#1E293B] px-5 py-4 flex justify-between items-center z-10 rounded-t-2xl">
+          <h2 className="text-xl font-black uppercase text-white">{title}</h2>
           <button
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-[#1E293B] transition-colors text-[#94A3B8] hover:text-white"
             aria-label="Close dialog"
           >
             <X size={22} />

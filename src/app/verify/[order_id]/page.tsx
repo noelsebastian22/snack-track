@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { CheckCircle2, AlertTriangle, Loader2, PackageCheck, ArrowLeft } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import BottomNav from '@/components/layout/BottomNav';
+import ToastContainer from '@/components/ui/ToastContainer';
+import { handoverOrder } from '@/app/actions/handover-order';
 
 const supabase = createClient();
 
@@ -35,7 +36,7 @@ export default function VerifyOrderPage() {
 
   const fetchOrder = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('orders').select('*').eq('id', order_id).single();
+    const { data, error } = await supabase.from('orders').select('*').eq('id', order_id as string).single();
     if (!error && data) setOrder(data);
     setLoading(false);
   }, [order_id]);
@@ -49,41 +50,22 @@ export default function VerifyOrderPage() {
     setProcessing(true);
 
     try {
-      const { error: orderError } = await supabase
-        .from('orders')
-        .update({ is_collected: true })
-        .eq('id', order.id);
+      const result = await handoverOrder(order.id);
 
-      if (orderError) throw orderError;
-
-      const itemUpdates = order.items.map(async (item) => {
-        const { data: product } = await supabase
-          .from('products')
-          .select('qty_available')
-          .eq('id', item.product_id)
-          .single();
-
-        if (product) {
-          await supabase
-            .from('products')
-            .update({ qty_available: Math.max(0, product.qty_available - item.qty) })
-            .eq('id', item.product_id);
-        }
-      });
-
-      await Promise.all(itemUpdates);
+      if (!result.success) {
+        throw new Error(result.error || 'Handover failed');
+      }
 
       confetti({
         particleCount: 150,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#FF8C00', '#2E7D32', '#1A1C1C'],
+        colors: ['#00C853', '#00A844', '#1E293B'],
       });
 
       await fetchOrder();
     } catch (error) {
       console.error('Handover failed:', error);
-      alert('Handover failed. Check console for details.');
     } finally {
       setProcessing(false);
     }
@@ -91,88 +73,89 @@ export default function VerifyOrderPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="animate-spin text-primary" size={48} />
+      <div className="min-h-screen flex items-center justify-center bg-[#0B0F19]">
+        <Loader2 className="animate-spin text-[#00C853]" size={48} />
       </div>
     );
   }
 
   if (!order) {
     return (
-      <main className="min-h-screen bg-background pb-20">
-        <header className="sticky top-0 z-10 bg-secondary text-white px-5 py-4">
-          <div className="max-w-2xl mx-auto flex items-center gap-3">
-            <button onClick={() => router.push('/verify')} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+      <main className="min-h-screen bg-[#0B0F19]">
+        <ToastContainer />
+        <header className="sticky top-0 z-10 bg-[#151C2C]/80 backdrop-blur-md border-b border-[#1E293B] px-5 py-4">
+          <div className="flex items-center gap-3">
+            <button onClick={() => router.push('/verify')} className="w-10 h-10 rounded-xl bg-[#0B0F19] border border-[#1E293B] flex items-center justify-center hover:border-[#00C853] transition-colors text-[#94A3B8]">
               <ArrowLeft size={20} />
             </button>
-            <span className="text-2xl font-black uppercase">Verify Order</span>
+            <span className="text-2xl font-black uppercase text-white">Verify Order</span>
           </div>
         </header>
-        <div className="max-w-2xl mx-auto p-5 flex flex-col items-center justify-center py-20 text-center gap-4">
-          <AlertTriangle size={64} className="text-error" />
-          <h1 className="text-2xl font-black">Order Not Found</h1>
-          <p className="text-on-surface-variant font-medium">This verification link is invalid or the order does not exist.</p>
+        <div className="flex flex-col items-center justify-center py-20 text-center gap-4 p-5">
+          <AlertTriangle size={64} className="text-[#EF4444]" />
+          <h1 className="text-2xl font-black text-white">Order Not Found</h1>
+          <p className="text-[#94A3B8] font-medium">This verification link is invalid or the order does not exist.</p>
           <button
             onClick={() => router.push('/verify')}
-            className="mt-4 px-6 py-3 bg-primary text-white font-bold rounded-lg border-2 border-secondary shadow-[4px_4px_0px_#1A1C1C] active:translate-y-0.5 active:shadow-none"
+            className="mt-4 px-6 py-3 bg-[#00C853] text-white font-bold rounded-xl hover:bg-[#00A844] active:scale-[0.98] transition-all"
           >
             Back to Search
           </button>
         </div>
-        <BottomNav />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-10 bg-secondary text-white px-5 py-4">
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <button onClick={() => router.push('/verify')} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+    <main className="min-h-screen bg-[#0B0F19]">
+      <ToastContainer />
+      <header className="sticky top-0 z-10 bg-[#151C2C]/80 backdrop-blur-md border-b border-[#1E293B] px-5 py-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push('/verify')} className="w-10 h-10 rounded-xl bg-[#0B0F19] border border-[#1E293B] flex items-center justify-center hover:border-[#00C853] transition-colors text-[#94A3B8]">
             <ArrowLeft size={20} />
           </button>
-          <span className="text-2xl font-black uppercase">Verify Order</span>
+          <span className="text-2xl font-black uppercase text-white">Verify Order</span>
         </div>
       </header>
 
-      <div className="max-w-2xl mx-auto p-5 space-y-5">
+      <div className="p-5 space-y-5 max-w-2xl">
         {/* Status Banner */}
         {order.is_collected ? (
-          <div className="bg-surface-container-highest border-2 border-error rounded-bento p-8 text-center space-y-4 shadow-[4px_4px_0px_#1A1C1C]">
-            <AlertTriangle size={64} className="mx-auto text-error" />
-            <h2 className="text-3xl font-black text-error">ALREADY COLLECTED</h2>
-            <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+          <div className="bg-[#151C2C] rounded-2xl border border-[#1E293B] p-8 text-center space-y-4 shadow-xl">
+            <AlertTriangle size={64} className="mx-auto text-[#EF4444]" />
+            <h2 className="text-3xl font-black text-[#EF4444]">ALREADY COLLECTED</h2>
+            <p className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">
               Handed over at: {order.paid_at ? new Date(order.paid_at).toLocaleTimeString() : 'Unknown'}
             </p>
           </div>
         ) : (
-          <div className="bg-success border-2 border-success rounded-bento p-8 text-center space-y-4 text-white shadow-[4px_4px_0px_#1A1C1C]">
-            <CheckCircle2 size={64} className="mx-auto" />
-            <h2 className="text-4xl font-black">VERIFIED</h2>
-            <p className="text-xs font-bold uppercase tracking-wider opacity-80">Ready for Handover</p>
+          <div className="bg-[#00C853] rounded-2xl p-8 text-center space-y-4 shadow-xl">
+            <CheckCircle2 size={64} className="mx-auto text-white" />
+            <h2 className="text-4xl font-black text-white">VERIFIED</h2>
+            <p className="text-xs font-bold uppercase tracking-wider text-white/80">Ready for Handover</p>
           </div>
         )}
 
         {/* Order Details */}
-        <div className="bg-white border-2 border-secondary rounded-bento p-5 shadow-[4px_4px_0px_#1A1C1C] space-y-5">
+        <div className="bg-[#151C2C] rounded-2xl border border-[#1E293B] p-6 shadow-xl space-y-5">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Customer</span>
-            <p className="text-xl font-black uppercase mt-1">{order.customer_name}</p>
+            <span className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">Customer</span>
+            <p className="text-xl font-black uppercase mt-1 text-white">{order.customer_name}</p>
           </div>
 
           <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Items</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">Items</span>
             {order.items?.map((item, i) => (
-              <div key={i} className="flex justify-between items-center p-4 bg-surface-container border border-outline-variant rounded-lg">
-                <span className="font-black">{item.qty}x {item.name}</span>
-                <span className="font-medium">${(item.price / 100).toFixed(2)}</span>
+              <div key={i} className="flex justify-between items-center p-4 bg-[#0B0F19] rounded-xl">
+                <span className="font-black text-white">{item.qty}x {item.name}</span>
+                <span className="font-medium text-[#94A3B8]">${(item.price / 100).toFixed(2)}</span>
               </div>
             ))}
           </div>
 
-          <div className="flex justify-between items-center pt-4 border-t-2 border-dashed border-outline">
-            <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Total Paid</span>
-            <span className="text-3xl font-black text-primary">${(order.total_amount / 100).toFixed(2)}</span>
+          <div className="flex justify-between items-center pt-4 border-t border-[#1E293B]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">Total Paid</span>
+            <span className="text-3xl font-black text-[#00C853]">${(order.total_amount / 100).toFixed(2)}</span>
           </div>
         </div>
 
@@ -181,21 +164,19 @@ export default function VerifyOrderPage() {
           <button
             onClick={handleHandover}
             disabled={processing}
-            className="w-full h-16 bg-primary text-white text-xl font-black rounded-bento border-2 border-secondary shadow-[6px_6px_0px_#1A1C1C] active:translate-y-1 active:shadow-none flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full h-16 bg-[#00C853] text-white text-xl font-bold tracking-wide rounded-xl hover:bg-[#00A844] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {processing ? (
               <Loader2 className="animate-spin" size={28} />
             ) : (
               <>
                 <PackageCheck size={28} />
-                CONFIRM HANDOVER & COMPLETE
+                HANDOVER COMPLETE
               </>
             )}
           </button>
         )}
       </div>
-
-      <BottomNav />
     </main>
   );
 }

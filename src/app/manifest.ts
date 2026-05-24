@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'High-performance Vendor POS for Snack-Track',
     start_url: '/',
     display: 'standalone',
-    background_color: '#F9F9F9',
-    theme_color: '#FF8C00',
+    background_color: '#0B0F19',
+    theme_color: '#00C853',
     icons: [
       {
         src: '/icon-192.png',

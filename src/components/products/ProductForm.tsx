@@ -2,15 +2,15 @@
 
 import { useState, useRef } from 'react';
 import imageCompression from 'browser-image-compression';
-import { Camera, X, Loader2 } from 'lucide-react';
+import { Camera, Loader2 } from 'lucide-react';
 import { saveProduct, uploadProductImage } from '@/app/actions/product-actions';
 
 interface ProductFormProps {
   onSuccess: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
 }
 
-export default function ProductForm({ onSuccess, onCancel }: ProductFormProps) {
+export default function ProductForm({ onSuccess, onCancel: _onCancel }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,7 +51,6 @@ export default function ProductForm({ onSuccess, onCancel }: ProductFormProps) {
       const file = fileInputRef.current?.files?.[0];
 
       if (file) {
-        // Compress image
         const options = {
           maxSizeMB: 0.5,
           maxWidthOrHeight: 800,
@@ -59,10 +58,8 @@ export default function ProductForm({ onSuccess, onCancel }: ProductFormProps) {
         };
         const compressedFile = await imageCompression(file, options);
 
-        // Convert to base64 for server action upload
         const base64Data = await fileToBase64(compressedFile);
 
-        // Upload via server action
         const uploadRes = await uploadProductImage(base64Data);
         if (!uploadRes.success || !uploadRes.imageUrl) {
           throw new Error(uploadRes.error || 'Upload failed');
@@ -71,11 +68,10 @@ export default function ProductForm({ onSuccess, onCancel }: ProductFormProps) {
         imageUrl = uploadRes.imageUrl;
       }
 
-      // Save to database via server action
       const result = await saveProduct({
         name: formData.name,
         description: formData.description || null,
-        price: Math.round(parseFloat(formData.price) * 100), // Convert to cents
+        price: Math.round(parseFloat(formData.price) * 100),
         qty_available: formData.qty_available,
         is_active: formData.is_active,
         image_url: imageUrl,
@@ -95,80 +91,73 @@ export default function ProductForm({ onSuccess, onCancel }: ProductFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-4 bg-white border-2 border-[var(--color-secondary)] rounded-[var(--radius-lg)]">
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="headline-lg">Add Product</h2>
-        <button type="button" onClick={onCancel} className="p-2">
-          <X size={24} />
-        </button>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Image Upload */}
+      <div 
+        onClick={() => fileInputRef.current?.click()}
+        className="relative w-full aspect-video bg-[#0B0F19] border-2 border-dashed border-[#1E293B] rounded-2xl flex flex-col items-center justify-center cursor-pointer overflow-hidden hover:border-[#00C853]/50 transition-colors"
+      >
+        {imagePreview ? (
+          <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+        ) : (
+          <>
+            <Camera size={40} className="text-[#94A3B8] mb-2" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">Upload Photo</span>
+          </>
+        )}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleImageChange} 
+          className="hidden" 
+          accept="image/*" 
+        />
       </div>
 
-      <div className="space-y-4">
-        {/* Image Upload */}
-        <div 
-          onClick={() => fileInputRef.current?.click()}
-          className="relative w-full aspect-square bg-[var(--color-surface-container)] border-2 border-dashed border-[var(--color-outline)] rounded-[var(--radius-md)] flex flex-col items-center justify-center cursor-pointer overflow-hidden"
-        >
-          {imagePreview ? (
-            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-          ) : (
-            <>
-              <Camera size={48} className="text-[var(--color-outline)]" />
-              <span className="label-bold mt-2">Upload Photo</span>
-            </>
-          )}
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleImageChange} 
-            className="hidden" 
-            accept="image/*" 
-          />
-        </div>
-
-        {/* Form Fields */}
-        <div className="space-y-2">
-          <label className="label-bold block">Product Name</label>
+      {/* Form Fields */}
+      <div className="space-y-3">
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">Product Name</label>
           <input
             required
             type="text"
             placeholder="e.g. Salted Soft Pretzel"
-            className="w-full p-3 border-2 border-[var(--color-secondary)] rounded-[var(--radius-default)] body-md outline-none focus:border-[var(--color-primary)]"
+            className="w-full bg-[#0B0F19] border border-[#1E293B] rounded-xl text-white px-4 py-3 outline-none focus:border-[#00C853] focus:ring-1 focus:ring-[#00C853] transition-colors"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="label-bold block">Price ($)</label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">Price ($)</label>
           <input
             required
             type="number"
             step="0.01"
             placeholder="0.00"
-            className="w-full p-3 border-2 border-[var(--color-secondary)] rounded-[var(--radius-default)] body-md outline-none focus:border-[var(--color-primary)]"
+            className="w-full bg-[#0B0F19] border border-[#1E293B] rounded-xl text-white px-4 py-3 outline-none focus:border-[#00C853] focus:ring-1 focus:ring-[#00C853] transition-colors"
             value={formData.price}
             onChange={(e) => setFormData({ ...formData, price: e.target.value })}
           />
         </div>
 
-        <div className="flex items-center justify-between p-3 border-2 border-[var(--color-secondary)] rounded-[var(--radius-default)]">
-          <span className="label-bold">Show in Menu</span>
+        <div className="flex items-center justify-between p-3 bg-[#0B0F19] border border-[#1E293B] rounded-xl">
+          <span className="text-sm font-bold text-white">Show in Menu</span>
           <button
             type="button"
             onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
-            className={`w-12 h-6 rounded-full transition-colors relative ${formData.is_active ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-outline)]'}`}
+            className={`w-14 h-7 rounded-full transition-colors relative ${formData.is_active ? 'bg-[#00C853]' : 'bg-[#1E293B]'}`}
           >
-            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.is_active ? 'translate-x-6' : ''}`} />
+            <div className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform shadow ${formData.is_active ? 'translate-x-7' : ''}`} />
           </button>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-[var(--spacing-touch-target)] bg-[var(--color-primary)] text-white label-bold rounded-[var(--radius-default)] border-2 border-[var(--color-secondary)] active:translate-y-0.5 flex items-center justify-center"
+          className="w-full h-12 bg-[#00C853] text-white font-bold rounded-xl hover:bg-[#00A844] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center disabled:opacity-50"
         >
-          {loading ? <Loader2 className="animate-spin" /> : 'Save Product'}
+          {loading ? <Loader2 className="animate-spin" size={20} /> : 'Save Product'}
         </button>
       </div>
     </form>
