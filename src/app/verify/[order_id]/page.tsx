@@ -35,7 +35,24 @@ export default function VerifyOrderPage() {
 
   const fetchOrder = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('orders').select('*').eq('id', order_id as string).single();
+
+    // Try fetching by UUID first (standard QR code flow)
+    let { data, error }: { data: Order | null; error: unknown } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', order_id as string)
+      .single();
+
+    // Fall back to phone number search if ID is not a valid UUID or no match found
+    if (error || !data) {
+      ({ data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .ilike('customer_phone', `%${order_id}%`)
+        .limit(1)
+        .single());
+    }
+
     if (!error && data) setOrder(data);
     setLoading(false);
   }, [order_id]);
