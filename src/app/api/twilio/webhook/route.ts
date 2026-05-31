@@ -342,7 +342,8 @@ async function processOrder(session: SessionState, phone: string): Promise<strin
   }
 
   // Create Stripe checkout session
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/create-checkout`, {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+  const res = await fetch(`${baseUrl}/api/create-checkout`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

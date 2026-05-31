@@ -3,6 +3,15 @@ import { createServiceRoleClient } from '@/utils/supabase/service-role'
 import { stripe } from '@/utils/stripe'
 import { generateShortOrderId } from '@/lib/verification-code'
 
+function getBaseUrl(req: NextRequest): string {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ||               // explicit env var (highest priority)
+    process.env.VERCEL_URL ||                        // Vercel auto-set to production domain
+    req.headers.get('origin') ||                     // request origin (browser flows)
+    'http://localhost:3000'                           // local dev fallback
+  )
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -54,8 +63,8 @@ export async function POST(req: NextRequest) {
         customer_phone,
       },
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin')}/verify/success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin')}/verify`,
+      success_url: `${getBaseUrl(req)}/verify/success`,
+      cancel_url: `${getBaseUrl(req)}/verify`,
     })
 
     // Store order in database
