@@ -128,9 +128,17 @@ async function handleMessage(
     return sendMenu(session) // fallback
   }
 
+  const supabase = createServiceRoleClient()
+  const { data: allProducts } = await supabase
+    .from('products')
+    .select('id, name, price, qty_available')
+    .eq('is_active', true)
+    .gt('qty_available', 0)
+    .order('name')
+
   // If we have a cart, treat this as "add item" continuation
   if ((session.cart && session.cart.length > 0) && session.state !== 'payment_sent') {
-    const newItems = parseItemsFromMessage(message)
+    const newItems = parseItemsFromMessage(message, allProducts || [])
     if (newItems.length > 0) {
       session.cart = [...session.cart, ...newItems]
       session.state = 'building_cart'
@@ -140,7 +148,7 @@ async function handleMessage(
   }
 
   // Try to parse items directly (single-item order flow)
-  const newItems = parseItemsFromMessage(message)
+  const newItems = parseItemsFromMessage(message, allProducts || [])
   if (newItems.length > 0) {
     session.cart = [...(session.cart || []), ...newItems]
     session.state = 'building_cart'
@@ -154,16 +162,82 @@ async function handleMessage(
   return sendMenu(session)
 }
 
-function parseItemsFromMessage(message: string): Array<{ name: string; qty: number }> {
+function parseItemsFromMessage(
+  message: string, 
+  products: Array<{ id: string; name: string; price: number; qty_available: number }>
+): Array<{ name: string; qty: number }> {
   const items: Array<{ name: string; qty: number }> = []
-  const regex = /(\d+)\s*x?\s*([a-zA-Z][a-zA-Z0-9\s]{2,})/g
-  let match
 
-  while ((match = regex.exec(message)) !== null) {
-    const qty = parseInt(match[1], 10)
-    const name = match[2].trim()
-    if (qty > 0 && name.length >= 3) {
-      items.push({ name, qty })
+  // Try index-based format first: "2x 1", "3 2", "5" (qty 5 of item #5), etc.
+  const indexRegex = /(\d+)\s*x?\s*(\d+)/g
+  let indexMatch
+
+  while ((indexMatch = indexRegex.exec(message)) !== null) {
+    const qty = parseInt(indexMatch[1], 10)
+    const indexPos = parseInt(indexMatch[2], 10)
+    if (qty > 0 && indexPos >= 1 && indexPos <= products.length) {
+      const product = products[indexPos - 1]
+      items.push({ name: product.name, qty })
+    }
+  }
+
+  // If no index-based matches, fall back to name-based fuzzy matching
+  if (items.length === 0) {
+    // Check for bare number like "3" → quantity default of 1
+    const bareNumber = /^(\d+)$/g.exec(message.trim())
+    if (bareNumber) {
+      const indexPos = parseInt(bareNumber[1], 10)
+      if (indexPos >= 1 && indexPos <= products.length) {
+        items.push({ name: products[indexPos - 1].name, qty: 1 })
+      }
+    }
+
+    // Also try legacy "2x Samosa" name parsing
+    const legacyRegex = /(\d+)\s*x?\s*([a-zA-Z][a-zA-Z0-9\s]{2,})/g
+    let legacyMatch
+    while ((legacyMatch = legacyRegex.exec(message)) !== null) {
+      const qty = parseInt(legacyMatch[1], 10)
+      const name = legacyMatch[2].trim()
+      if (qty > 0 && name.length >= 3) {
+        // Try fuzzy match against products
+        const matched = products.find(p => {
+          const words = name.toLowerCase().split(/\s+/)
+          return words.every(w => p.name.toLowerCase().includes(w))
+        })
+        if (matched) {
+          items.push({ name: matched.name, qty })
+        } else {
+          // Fuzzy match: check if any product name contains the typed text
+          const fuzzy = products.find(p =>
+            name.toLowerCase().split(/\s+/).every(w => p.name.toLowerCase().includes(w)) ||
+            p.name.toLowerCase().includes(name.toLowerCase())
+          )
+          if (fuzzy) {
+            items.push({ name: fuzzy.name, qty })
+          } else {
+            // Store partial so user can see "not found" in cart
+            items.push({ name, qty })
+          }
+        }
+      }
+    }
+
+    // Try bare product name (no quantity) → defaults to qty 1
+    if (items.length === 0 && message.trim().length > 2) {
+      const trimmed = message.trim()
+      const matched = products.find(p => p.name.toLowerCase() === trimmed.toLowerCase())
+      if (matched) {
+        items.push({ name: matched.name, qty: 1 })
+      } else {
+        // Fuzzy single-item match
+        const fuzzy = products.find(p => {
+          const words = trimmed.toLowerCase().split(/\s+/)
+          return words.every(w => p.name.toLowerCase().includes(w))
+        })
+        if (fuzzy) {
+          items.push({ name: fuzzy.name, qty: 1 })
+        }
+      }
     }
   }
 
@@ -188,8 +262,9 @@ async function sendMenu(session: SessionState): Promise<string> {
 
 ${menuText || '(No items currently available)'}
 
-Reply with quantity and name, e.g. "2x Samosa" or "1x Chicken Pie".
-Send "menu" anytime. Send "cancel" to start over.</Message></Response>`
+Quick order: type the number and qty, e.g. "2x 1" for two Beef Satay.
+Or just type a product name like "Samosa" for one.
+Reply with more numbers to add to your cart, then "yes" to checkout.</Message></Response>`
 }
 
 async function resetSession(phone: string, session: SessionState): Promise<string> {
