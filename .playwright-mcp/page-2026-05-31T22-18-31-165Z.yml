@@ -1,0 +1,33 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - heading "Snack-Track" [level=1] [ref=e5]
+        - paragraph [ref=e6]: Vendor POS
+      - navigation [ref=e7]:
+        - paragraph [ref=e8]: Main
+        - link "Dashboard" [ref=e9] [cursor=pointer]:
+          - /url: /
+          - img [ref=e10]
+          - text: Dashboard
+        - link "Inventory" [ref=e15] [cursor=pointer]:
+          - /url: /inventory
+          - img [ref=e16]
+          - text: Inventory
+        - link "Verify" [ref=e20] [cursor=pointer]:
+          - /url: /verify
+          - img [ref=e21]
+          - text: Verify
+        - paragraph [ref=e27]: Admin
+        - link "Stock Dashboard" [ref=e28] [cursor=pointer]:
+          - /url: /admin/dashboard
+          - img [ref=e29]
+          - text: Stock Dashboard
+        - link "Menu Manager" [ref=e31] [cursor=pointer]:
+          - /url: /admin/products
+          - img [ref=e32]
+          - text: Menu Manager
+      - paragraph [ref=e36]: Snack-Track v1.0
+    - main [ref=e37]:
+      - img [ref=e39]
+  - alert [ref=e41]

@@ -73,7 +73,10 @@ export async function POST(req: NextRequest) {
     const messageBody = (body.get('Body') as string) || ''
 
     if (!fromPhone || !messageBody) {
-      return NextResponse.json({ error: 'Missing From or Body' }, { status: 400 })
+      return new NextResponse('Missing From or Body', {
+        status: 400,
+        headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
+      })
     }
 
     const session = await getSession(fromPhone)
@@ -93,7 +96,7 @@ export async function POST(req: NextRequest) {
     }
 
     return new NextResponse(twiml, {
-      headers: { 'Content-Type': 'text/xml' },
+      headers: { 'Content-Type': 'text/xml', 'Cache-Control': 'no-store' },
     })
   } catch (error) {
     console.error('Twilio webhook error:', error)
