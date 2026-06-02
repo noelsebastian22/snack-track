@@ -88,8 +88,8 @@ export async function POST(req: NextRequest) {
       const supabase = createServiceRoleClient()
       await supabase.from(TWILIO_SESSIONS_TABLE).delete().eq('phone_number', fromPhone)
     } else {
-      // Save updated session state (async, non-blocking)
-      void saveSession(fromPhone, {
+      // Save updated session state (await to prevent race conditions)
+      await saveSession(fromPhone, {
         ...session,
         updatedAt: Date.now(),
       })
@@ -265,9 +265,8 @@ async function sendMenu(session: SessionState): Promise<string> {
 
 ${menuText || '(No items currently available)'}
 
-Quick order: type the number and qty, e.g. "2x 1" for two Beef Satay.
-Or just type a product name like "Samosa" for one.
-Reply with more numbers to add to your cart, then "yes" to checkout.</Message></Response>`
+Quick order: type "2x 3" for 2x of item #3, or "2x Samosa" for fuzzy name match.
+Send "menu" anytime. Send "cancel" to start over.</Message></Response>`
 }
 
 async function resetSession(phone: string, session: SessionState): Promise<string> {
@@ -286,20 +285,26 @@ async function showCartSummary(session: SessionState, phone: string): Promise<st
     .gt('qty_available', 0)
     .order('name')
 
+  // Deduplicate cart by product name
+  const cartMap = new Map<string, number>()
+  for (const item of session.cart || []) {
+    cartMap.set(item.name, (cartMap.get(item.name) || 0) + item.qty)
+  }
+
   let orderTotal = 0
   const lines: string[] = ['Order so far:']
 
-  for (const item of session.cart || []) {
+  for (const [name, qty] of cartMap) {
     const matched = allProducts?.find(p => {
-      const words = item.name.toLowerCase().split(/\s+/)
+      const words = name.toLowerCase().split(/\s+/)
       return words.every(w => p.name.toLowerCase().includes(w))
     })
 
     if (matched) {
-      lines.push(`${item.qty}x ${matched.name} — $${((matched.price * item.qty) / 100).toFixed(2)}`)
-      orderTotal += matched.price * item.qty
+      lines.push(`${qty}x ${matched.name} — $${((matched.price * qty) / 100).toFixed(2)}`)
+      orderTotal += matched.price * qty
     } else {
-      lines.push(`${item.qty}x ${item.name} (not found)`)
+      lines.push(`${qty}x ${name} (not found)`)
     }
   }
 
@@ -319,29 +324,38 @@ async function processOrder(session: SessionState, phone: string): Promise<strin
     .gt('qty_available', 0)
     .order('name')
 
+  session.state = 'payment_sent'
+  await saveSession(phone, { ...session, updatedAt: Date.now() })
+
   if (!session.cart || session.cart.length === 0) {
     return `<Response><Message>Your cart is empty. Send "menu" to start ordering.</Message></Response>`
+  }
+
+  // Deduplicate cart by product name
+  const cartMap = new Map<string, number>()
+  for (const item of session.cart) {
+    cartMap.set(item.name, (cartMap.get(item.name) || 0) + item.qty)
   }
 
   // Validate stock and build order payload
   const orderItems: Array<{ product_id: string; name: string; qty: number; price: number }> = []
   let totalAmount = 0
 
-  for (const item of session.cart) {
+  for (const [name, qty] of cartMap) {
     const matched = allProducts?.find(p => {
-      const words = item.name.toLowerCase().split(/\s+/)
+      const words = name.toLowerCase().split(/\s+/)
       return words.every(w => p.name.toLowerCase().includes(w))
     })
 
     if (!matched) {
-      return `<Response><Message>We couldn't find "${item.name}" in the menu. Send "menu" to see available items.</Message></Response>`
+      return `<Response><Message>We couldn't find "${name}" in the menu. Send "menu" to see available items.</Message></Response>`
     }
-    if (matched.qty_available < item.qty) {
+    if (matched.qty_available < qty) {
       return `<Response><Message>Sorry, only ${matched.qty_available} of ${matched.name} are left.</Message></Response>`
     }
 
-    orderItems.push({ product_id: matched.id, name: matched.name, qty: item.qty, price: matched.price })
-    totalAmount += matched.price * item.qty
+    orderItems.push({ product_id: matched.id, name: matched.name, qty, price: matched.price })
+    totalAmount += matched.price * qty
   }
 
   // Create Stripe checkout session
