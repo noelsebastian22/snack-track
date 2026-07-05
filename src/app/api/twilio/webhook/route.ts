@@ -24,11 +24,15 @@ async function getSession(phone: string): Promise<SessionState> {
     .eq('phone_number', phone)
     .single()
 
-  if (existing && isSessionActive(existing.updated_at)) {
+  // Supabase returns timestamptz columns as ISO strings — parse before comparing,
+  // otherwise Date.now() - string === NaN and every session looks expired.
+  const updatedAtMs = existing ? new Date(existing.updated_at).getTime() : NaN
+
+  if (existing && Number.isFinite(updatedAtMs) && isSessionActive(updatedAtMs)) {
     return {
       state: existing.state as string,
       cart: Array.isArray(existing.cart) ? existing.cart : [],
-      updatedAt: new Date(existing.updated_at).getTime(),
+      updatedAt: updatedAtMs,
     }
   }
 
