@@ -53,13 +53,16 @@ export async function POST(req: NextRequest) {
     const stripeSession = await stripe.checkout.sessions.create({
       customer_email: undefined, // Let Stripe collect it if they provide a phone number in metadata
       payment_method_types: ['card'],
-      line_items: items.map((item: { name: string; price: number; qty: number }) => ({
+      // Use DB-sourced prices (productPrices), never the client payload — the
+      // WhatsApp bot sends items without a price field, and trusting a
+      // client-supplied price would allow tampering anyway.
+      line_items: items.map((item: { product_id: string; name: string; qty: number }) => ({
         price_data: {
           currency: 'sgd',
           product_data: {
             name: item.name,
           },
-          unit_amount: item.price,
+          unit_amount: productPrices[item.product_id],
         },
         quantity: item.qty,
       })),
