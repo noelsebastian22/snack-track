@@ -104,9 +104,11 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     console.error('Twilio webhook error:', error)
+    // Must be 200: Twilio only renders TwiML on 2xx responses. Returning 500
+    // means the user gets total silence instead of this error message.
     return new NextResponse(
       '<Response><Message>Sorry, something went wrong. Try again later.</Message></Response>',
-      { status: 500, headers: { 'Content-Type': 'text/xml' } }
+      { status: 200, headers: { 'Content-Type': 'text/xml' } }
     )
   }
 }
@@ -363,7 +365,12 @@ async function processOrder(session: SessionState, phone: string): Promise<strin
   }
 
   // Create Stripe checkout session
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+  const rawBaseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+  // VERCEL_URL is a bare hostname (no scheme) — fetch() throws on schemeless URLs.
+  const baseUrl = (rawBaseUrl.startsWith('http://') || rawBaseUrl.startsWith('https://')
+    ? rawBaseUrl
+    : `https://${rawBaseUrl}`
+  ).replace(/\/$/, '')
   const res = await fetch(`${baseUrl}/api/create-checkout`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

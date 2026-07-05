@@ -4,12 +4,17 @@ import { stripe } from '@/utils/stripe'
 import { generateShortOrderId } from '@/lib/verification-code'
 
 function getBaseUrl(req: NextRequest): string {
-  return (
+  const raw =
     process.env.NEXT_PUBLIC_APP_URL ||               // explicit env var (highest priority)
-    process.env.VERCEL_URL ||                        // Vercel auto-set to production domain
+    process.env.VERCEL_URL ||                        // Vercel auto-set — bare hostname, NO scheme
     req.headers.get('origin') ||                     // request origin (browser flows)
     'http://localhost:3000'                           // local dev fallback
-  )
+
+  // VERCEL_URL (and a mis-saved env var) can lack a scheme; Stripe and fetch()
+  // both reject schemeless URLs, so normalize here.
+  return raw.startsWith('http://') || raw.startsWith('https://')
+    ? raw.replace(/\/$/, '')
+    : `https://${raw.replace(/\/$/, '')}`
 }
 
 export async function POST(req: NextRequest) {
